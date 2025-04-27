@@ -1,14 +1,14 @@
 # Corsair Network Test Tool
-#Mail Trace Module
-# This module provides functionality to send crash reports via email using SMTP.
-# It captures unhandled exceptions in Tkinter callbacks and sends the traceback to a specified email address.
-# It also provides a simple GUI interface to test the email functionality.
+# Mail Trace Module
+# This module provides functionality to send crash reports via email using SMTP,
+# captures unhandled exceptions in Tkinter callbacks and sends the traceback to a specified email,
+# and provides a GUI interface to test email functionality and view the SMTP trace only.
+# mail trace alpha 0.1
 
 import logging
 from logging.handlers import SMTPHandler
-import sys
 import tkinter as tk
-from tkinter import ttk, scrolledtext
+from tkinter import ttk, scrolledtext, messagebox
 import smtplib, io
 
 # --------------------------------------------------
@@ -22,7 +22,6 @@ CONFIG = {
 }
 # --------------------------------------------------
 
-# Custom SMTPHandler that captures the SMTP protocol trace
 class TracingSMTPHandler(SMTPHandler):
     def emit(self, record):
         try:
@@ -31,23 +30,19 @@ class TracingSMTPHandler(SMTPHandler):
             smtp = smtplib.SMTP(self.mailhost, port, timeout=self.timeout)
             smtp.set_debuglevel(1)
 
-            # capture *all* debug args into our buffer
             def capture_debug(*args):
                 debug_buf.write(" ".join(str(a) for a in args) + "\n")
             smtp._print_debug = capture_debug
 
-            # perform handshake and authentication
             if self.username:
                 smtp.ehlo()
                 smtp.starttls()
                 smtp.ehlo()
                 smtp.login(self.username, self.password)
 
-            # format the log record (includes traceback)
             msg = self.format(record)
             full_msg = msg + "\n\n--- SMTP TRACE ---\n" + debug_buf.getvalue()
 
-            # send email and store debug trace
             smtp.sendmail(self.fromaddr, self.toaddrs, full_msg)
             smtp.quit()
             self.debug_trace = debug_buf.getvalue()
@@ -59,7 +54,7 @@ logger = logging.getLogger("MailTrace")
 logger.setLevel(logging.ERROR)
 logger.propagate = False
 
-# Factory to create our tracing handler
+# Factory for tracing handler
 def make_smtp_handler():
     handler = TracingSMTPHandler(
         mailhost=(CONFIG["host"], CONFIG["port"]),
@@ -67,7 +62,7 @@ def make_smtp_handler():
         toaddrs=CONFIG["to"],
         subject="Crash Report: Network Test Tool",
         credentials=(CONFIG["user"], CONFIG["pass"]),
-        secure=(),  # use STARTTLS
+        secure=(),
     )
     fmt = logging.Formatter(
         "%(asctime)s\n"
@@ -81,17 +76,16 @@ def make_smtp_handler():
 smtp_handler = make_smtp_handler()
 logger.addHandler(smtp_handler)
 
-# Hook uncaught Tkinter exceptions to our logger
+# Hook uncaught Tkinter exceptions
 def report_callback_exception(self, exc, val, tb):
     logger.exception("Unhandled exception in Tkinter callback", exc_info=(exc, val, tb))
-    # console printing removed to avoid clutter
 
-# Call before tk.Tk() to install the hook
+# Install before tk.Tk()
 def install_mail_trace():
     tk.Tk.report_callback_exception = report_callback_exception
-    return lambda f: f  # decorator no-op
+    return lambda f: f
 
-# Create the Mail Trace tab in the notebook
+# Create the Mail Trace tab
 def create_mail_trace_tab(notebook):
     frame = ttk.Frame(notebook)
     notebook.add(frame, text="Mail Trace")
@@ -105,7 +99,6 @@ def create_mail_trace_tab(notebook):
                         show='*' if key=='pass' else None)
         ent.grid(row=i, column=1, padx=5, pady=2)
         entries[key] = var
-    # Recipients list
     ttk.Label(frame, text="Recipients (comma-separated):").grid(row=4, column=0, sticky="w", padx=5, pady=2)
     to_var = tk.StringVar(value=','.join(CONFIG['to']))
     to_ent = ttk.Entry(frame, textvariable=to_var, width=40)
@@ -121,7 +114,7 @@ def create_mail_trace_tab(notebook):
         log.config(state='disabled')
         log.see(tk.END)
 
-    # Save settings button
+    # Save Settings
     def save_settings():
         global smtp_handler
         for k, var in entries.items():
@@ -136,31 +129,17 @@ def create_mail_trace_tab(notebook):
     ttk.Button(frame, text="Save Settings", command=save_settings)\
         .grid(row=6, column=0, padx=5, pady=5)
 
-    # Send Test Report button with updated behavior
+    # Send Test Report
     def send_test_report():
         append_log("Triggering test report...")
         try:
             raise RuntimeError("Test crash trigger.")
         except Exception:
-            # Send the email and log it
+            # send and log exception
             logger.exception("Manual test exception")
             append_log("Test exception logged and emailed.")
 
-            # Rebuild and display the email body
-            import traceback, datetime
-            tb = traceback.format_exc()
-            ts = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S,%f")[:-3]
-            body = (
-                f"{ts}\n"
-                f"MailTrace ERROR\n\n"
-                f"Manual test exception\n"
-                f"{tb}"
-            )
-            append_log("--- Email Content ---")
-            for line in body.strip().splitlines():
-                append_log(line)
-
-            # Display the SMTP handshake trace
+            # display only the SMTP TRACE
             append_log("--- SMTP TRACE ---")
             trace = getattr(smtp_handler, "debug_trace", "")
             for line in trace.strip().splitlines():
@@ -169,17 +148,14 @@ def create_mail_trace_tab(notebook):
     ttk.Button(frame, text="Send Test Report", command=send_test_report)\
         .grid(row=6, column=1, padx=5, pady=5)
 
-    # allow expansion
     frame.grid_rowconfigure(5, weight=1)
     frame.grid_columnconfigure(1, weight=1)
     return frame
 
 if __name__ == "__main__":
-    install_mail_trace()  # patch Tk
-    # standalone test (won't send GUI)
+    install_mail_trace()
     try:
         raise RuntimeError("This is a test exception")
     except Exception:
         import traceback
-        tb = traceback.format_exc()
         print("Test crash report sent (check your app's Mail Trace tab).")
