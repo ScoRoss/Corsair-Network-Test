@@ -17,7 +17,7 @@ CONFIG = {
     "host": "smtp.gmail.com",
     "port": 587,
     "user": "coonta75@gmail.com",
-    "pass": "kxyy pjfw ngai igxc",
+    "pass": "",
     "to":   ["coonta75@gmail.com"],
 }
 # --------------------------------------------------
