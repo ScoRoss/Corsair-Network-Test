@@ -15,11 +15,11 @@ import dns.exception
 import json
 from datetime import datetime
 from Mail_Trace import install_mail_trace, create_mail_trace_tab
-# 1. Hook up the exception-mailer before any Tk stuff:
 install_mail_trace()
 import tkinter as tk
 from tkinter import ttk, messagebox, scrolledtext, filedialog
 from PIL import Image, ImageTk
+
 
 # Main application class for the network testing tool
 class NetworkTesterApp:
@@ -62,6 +62,8 @@ class NetworkTesterApp:
         self.website_tab = ttk.Frame(self.notebook)
         self.notebook.add(self.website_tab, text="Website/DNS")
         self.setup_website_tab()
+                # — Mail Trace Tab —
+        create_mail_trace_tab(self.notebook)
         
         # Console for logging messages
         self.console = scrolledtext.ScrolledText(self.main_frame, height=12, wrap=tk.WORD)
