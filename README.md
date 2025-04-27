@@ -37,3 +37,7 @@ A standalone Python/Tkinter application for diagnosing network connectivity and 
    ```bash
    git clone https://github.com/<your-username>/corsair-network-test.git
    cd corsair-network-test
+
+### Future Work
+
+# Will be looking to add a RED Warning text for when a DNS is down.
