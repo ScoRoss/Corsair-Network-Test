@@ -1,7 +1,7 @@
 #Author: Ross Lamont
 #Date: 27/04/2025
 #Description: A network testing tool for Corsair devices, providing various network diagnostics and performance tests.
-#Version: 0.5
+#Version Alpha: 0.6
 # This script is designed to be run as a standalone application and provides a GUI for users to perform network tests.
 
 import time
@@ -14,7 +14,9 @@ import dns.resolver
 import dns.exception
 import json
 from datetime import datetime
-#from mail_traceroute import traceroute
+from Mail_Trace import install_mail_trace, create_mail_trace_tab
+# 1. Hook up the exception-mailer before any Tk stuff:
+install_mail_trace()
 import tkinter as tk
 from tkinter import ttk, messagebox, scrolledtext, filedialog
 from PIL import Image, ImageTk
@@ -35,6 +37,7 @@ class NetworkTesterApp:
             self.tk_image = ImageTk.PhotoImage(self.image)
             self.image_label = tk.Label(root, image=self.tk_image, bg='#0078D7')
             self.image_label.pack(pady=10)
+            self.mail_trace_tab = create_mail_trace_tab(self.notebook)
         except:
             pass
         
