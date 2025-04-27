@@ -1,3 +1,9 @@
+#Author: Ross Lamont
+#Date: 27/04/2025
+#Description: A network testing tool for Corsair devices, providing various network diagnostics and performance tests.
+#Version: 0.5
+# This script is designed to be run as a standalone application and provides a GUI for users to perform network tests.
+
 import time
 import threading
 import socket
