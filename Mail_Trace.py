@@ -1,9 +1,9 @@
-# Corsair Network Test Tool
+# Corsair Network Test Tool For Mail Trace Addition
 # Mail Trace Module
 # This module provides functionality to send crash reports via email using SMTP,
 # captures unhandled exceptions in Tkinter callbacks and sends the traceback to a specified email,
 # and provides a GUI interface to test email functionality and view the SMTP trace only.
-# mail trace alpha 0.1
+# Mail Trace Alpha 0.2
 
 import logging
 from logging.handlers import SMTPHandler
